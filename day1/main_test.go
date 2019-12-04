@@ -28,3 +28,23 @@ func TestCalculateFuel(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateFuelWithFiction(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		mass   int
+		expect int
+	}{
+		{desc: "mass of 14", mass: 14, expect: 2},
+		{desc: "mass of 1969", mass: 1969, expect: 966},
+		{desc: "mass of 100756", mass: 100756, expect: 50346},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got := calculateFuelWithFiciton(tC.mass)
+			if got != tC.expect {
+				t.Errorf("got '%v' expect '%v'", got, tC.expect)
+			}
+		})
+	}
+}

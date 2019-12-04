@@ -16,6 +16,20 @@ func calculateFuel(mass int) int {
 	return int(math.Floor(float64(mass)/3.0)) - 2
 }
 
+func calculateFuelWithFiciton(mass int) int {
+	remainFuel := mass
+	var total int
+loop:
+	for remainFuel > 0 {
+		remainFuel = calculateFuel(remainFuel)
+		if remainFuel < 0 {
+			break loop
+		}
+		total += remainFuel
+	}
+	return total
+}
+
 func main() {
 	f, err := os.Open(inputPath)
 	if err != nil {
@@ -32,9 +46,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		total += calculateFuel(mass)
+		total += calculateFuelWithFiciton(mass)
 	}
 
 	fmt.Println(total)
-
 }
