@@ -11,7 +11,7 @@ import (
 
 const inputPath = "input.txt"
 
-var directions = map[byte]Point{
+var directions = map[byte]Vector{
 	'U': {0, 1},
 	'D': {0, -1},
 	'L': {-1, 0},
@@ -27,17 +27,17 @@ func main() {
 	fmt.Println(findClosestIntersctionOnLine(string(b)))
 }
 
-type Point struct {
+type Vector struct {
 	x, y int
 }
 
-type Line []Point
+type Line []Vector
 
-func (l *Line) addPoint(p Point) {
+func (l *Line) addPoint(p Vector) {
 	*l = append(*l, p)
 }
 
-func (l *Line) calculateDistance(point Point) (distance int) {
+func (l *Line) calculateDistance(point Vector) (distance int) {
 	for i, p := range *l {
 		if p == point {
 			return i + 1
@@ -46,9 +46,9 @@ func (l *Line) calculateDistance(point Point) (distance int) {
 	return math.MaxInt32
 }
 
-func (l *Line) intersect(another Line) []Point {
-	seem := make(map[Point]struct{})
-	var insertectPoints []Point
+func (l *Line) intersect(another Line) []Vector {
+	seem := make(map[Vector]struct{})
+	var insertectPoints []Vector
 	for _, point := range *l {
 		seem[point] = struct{}{}
 	}
@@ -65,7 +65,7 @@ func route(instructions []string) Line {
 	var direction byte
 	var distance int
 
-	current := Point{0, 0}
+	current := Vector{0, 0}
 	var wire Line
 	for _, ins := range instructions {
 		_, err := fmt.Sscanf(ins, "%c%d", &direction, &distance)
@@ -80,7 +80,7 @@ func route(instructions []string) Line {
 	return wire
 }
 
-func calculateManhattanDistance(c Point) int {
+func calculateManhattanDistance(c Vector) int {
 	return abs(c.x) + abs(c.y)
 }
 
