@@ -86,9 +86,8 @@ func calculateManhattanDistance(c Point) int {
 
 func findClosestIntersction(wireStr string) int {
 	wires := strings.Split(wireStr, "\n")
-	// should only have two lines
 	if len(wires) != 2 {
-		return 0
+		panic("should only have two lines")
 	}
 
 	lines := make([]Line, len(wires))
@@ -98,10 +97,8 @@ func findClosestIntersction(wireStr string) int {
 	}
 
 	intersectionPoints := lines[0].intersect(lines[1])
-
-	// no interseciton point
 	if len(intersectionPoints) == 0 {
-		return 0
+		panic("no intersect")
 	}
 
 	minManhattanDistance := calculateManhattanDistance(intersectionPoints[0])
@@ -115,9 +112,8 @@ func findClosestIntersction(wireStr string) int {
 
 func findClosestIntersctionOnLine(wireStr string) int {
 	wires := strings.Split(wireStr, "\n")
-	// should only have two lines
 	if len(wires) != 2 {
-		return 0
+		panic("should only have two lines")
 	}
 
 	lines := make([]Line, len(wires))
@@ -127,9 +123,8 @@ func findClosestIntersctionOnLine(wireStr string) int {
 	}
 
 	intersectionPoints := lines[0].intersect(lines[1])
-	// no interseciton point
 	if len(intersectionPoints) == 0 {
-		return 0
+		panic("no intersect")
 	}
 
 	var stepCounts []int
