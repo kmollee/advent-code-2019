@@ -5,10 +5,18 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"sort"
 	"strings"
 )
 
 const inputPath = "input.txt"
+
+var directions = map[byte]Point{
+	'U': {0, 1},
+	'D': {0, -1},
+	'L': {-1, 0},
+	'R': {1, 0},
+}
 
 func main() {
 	b, err := ioutil.ReadFile(inputPath)
@@ -17,16 +25,19 @@ func main() {
 	}
 	fmt.Println(findClosestIntersction(string(b)))
 	fmt.Println(findClosestIntersctionOnLine(string(b)))
-
 }
 
-type coordinate struct {
+type Point struct {
 	x, y int
 }
 
-type line []coordinate
+type Line []Point
 
-func (l *line) calculateDistance(point coordinate) int {
+func (l *Line) addPoint(p Point) {
+	*l = append(*l, p)
+}
+
+func (l *Line) calculateDistance(point Point) (distance int) {
 	for i, p := range *l {
 		if p == point {
 			return i + 1
@@ -35,91 +46,42 @@ func (l *line) calculateDistance(point coordinate) int {
 	return math.MaxInt32
 }
 
-func (c *coordinate) StepX(distance int) line {
-	if distance == 0 {
-		return nil
-	}
-
-	var history line
-	if distance < 0 {
-		for i := 0; i > distance; i-- {
-			c.x--
-			history = append(history, coordinate{c.x, c.y})
-		}
-	} else {
-		for i := 0; i < distance; i++ {
-			c.x++
-			history = append(history, coordinate{c.x, c.y})
-		}
-	}
-	return history
-}
-
-func (c *coordinate) StepY(distance int) line {
-	if distance == 0 {
-		return nil
-	}
-
-	var history line
-	if distance < 0 {
-		for i := 0; i > distance; i-- {
-			c.y--
-			history = append(history, coordinate{c.x, c.y})
-		}
-	} else {
-		for i := 0; i < distance; i++ {
-			c.y++
-			history = append(history, coordinate{c.x, c.y})
-		}
-	}
-	return history
-}
-
-func route(instructions []string) line {
-	var direction byte
-	var distance int
-
-	current := coordinate{0, 0}
-	var history line
-	for _, ins := range instructions {
-		_, err := fmt.Sscanf(ins, "%c%d", &direction, &distance)
-		if err != nil {
-			panic(err)
-		}
-
-		switch direction {
-		case 'L':
-			history = append(history, current.StepX(-distance)...)
-		case 'R':
-			history = append(history, current.StepX(distance)...)
-		case 'U':
-			history = append(history, current.StepY(distance)...)
-		case 'D':
-			history = append(history, current.StepY(-distance)...)
-		default:
-			panic(fmt.Sprintf("unexpect instruction:%s", ins))
-		}
-	}
-	return history
-}
-
-func calculateManhattanDistance(c coordinate) int {
-	return abs(c.x) + abs(c.y)
-}
-
-func findIntersection(a, b line) []coordinate {
-	seem := make(map[coordinate]struct{})
-	var insertectPoints []coordinate
-	for _, point := range a {
+func (l *Line) intersect(another Line) []Point {
+	seem := make(map[Point]struct{})
+	var insertectPoints []Point
+	for _, point := range *l {
 		seem[point] = struct{}{}
 	}
 
-	for _, point := range b {
+	for _, point := range another {
 		if _, exist := seem[point]; exist {
 			insertectPoints = append(insertectPoints, point)
 		}
 	}
 	return insertectPoints
+}
+
+func route(instructions []string) Line {
+	var direction byte
+	var distance int
+
+	current := Point{0, 0}
+	var wire Line
+	for _, ins := range instructions {
+		_, err := fmt.Sscanf(ins, "%c%d", &direction, &distance)
+		check(err)
+
+		for i := 0; i < distance; i++ {
+			current.x += directions[direction].x
+			current.y += directions[direction].y
+			wire.addPoint(current)
+		}
+	}
+	return wire
+}
+
+func calculateManhattanDistance(c Point) int {
+	return abs(c.x) + abs(c.y)
 }
 
 func findClosestIntersction(wireStr string) int {
@@ -129,13 +91,13 @@ func findClosestIntersction(wireStr string) int {
 		return 0
 	}
 
-	lines := make([]line, len(wires))
+	lines := make([]Line, len(wires))
 	for i, wire := range wires {
 		instructions := strings.Split(wire, ",")
 		lines[i] = route(instructions)
 	}
 
-	intersectionPoints := findIntersection(lines[0], lines[1])
+	intersectionPoints := lines[0].intersect(lines[1])
 
 	// no interseciton point
 	if len(intersectionPoints) == 0 {
@@ -146,7 +108,6 @@ func findClosestIntersction(wireStr string) int {
 
 	for _, point := range intersectionPoints[1:] {
 		minManhattanDistance = min(minManhattanDistance, calculateManhattanDistance(point))
-
 	}
 
 	return minManhattanDistance
@@ -159,27 +120,28 @@ func findClosestIntersctionOnLine(wireStr string) int {
 		return 0
 	}
 
-	lines := make([]line, len(wires))
+	lines := make([]Line, len(wires))
 	for i, wire := range wires {
 		instructions := strings.Split(wire, ",")
 		lines[i] = route(instructions)
 	}
 
-	intersectionPoints := findIntersection(lines[0], lines[1])
-
+	intersectionPoints := lines[0].intersect(lines[1])
 	// no interseciton point
 	if len(intersectionPoints) == 0 {
 		return 0
 	}
 
-	minLineDistance := lines[0].calculateDistance(intersectionPoints[0]) + lines[1].calculateDistance(intersectionPoints[0])
-
-	for _, point := range intersectionPoints[1:] {
-
-		minLineDistance = min(minLineDistance, lines[0].calculateDistance(point)+lines[1].calculateDistance(point))
+	var stepCounts []int
+	// now go through each intersection and find the one with the least number of steps
+	for _, point := range intersectionPoints {
+		stepsWire1 := lines[0].calculateDistance(point)
+		stepsWire2 := lines[1].calculateDistance(point)
+		stepCounts = append(stepCounts, stepsWire1+stepsWire2)
 	}
 
-	return minLineDistance
+	sort.Ints(stepCounts)
+	return stepCounts[0]
 }
 
 func min(x, y int) int {
@@ -194,4 +156,14 @@ func abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func panicf(fmtStr string, args ...interface{}) {
+	panic(fmt.Sprintf(fmtStr, args...))
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

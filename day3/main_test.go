@@ -9,32 +9,32 @@ func TestRoute(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		input  []string
-		expect line
+		expect Line
 	}{
 		{
 			desc:   "right",
 			input:  []string{"R1", "R1"},
-			expect: line{{1, 0}, {2, 0}},
+			expect: Line{{1, 0}, {2, 0}},
 		},
 		{
 			desc:   "right and left",
 			input:  []string{"L1", "L1", "R1"},
-			expect: line{{-1, 0}, {-2, 0}, {-1, 0}},
+			expect: Line{{-1, 0}, {-2, 0}, {-1, 0}},
 		},
 		{
 			desc:   "up and right",
 			input:  []string{"U1", "R1"},
-			expect: line{{0, 1}, {1, 1}},
+			expect: Line{{0, 1}, {1, 1}},
 		},
 		{
 			desc:   "up right down",
 			input:  []string{"U1", "R1", "D1"},
-			expect: line{{0, 1}, {1, 1}, {1, 0}},
+			expect: Line{{0, 1}, {1, 1}, {1, 0}},
 		},
 		{
 			desc:   "circle",
 			input:  []string{"U1", "R1", "D1", "L1"},
-			expect: line{{0, 1}, {1, 1}, {1, 0}, {0, 0}},
+			expect: Line{{0, 1}, {1, 1}, {1, 0}, {0, 0}},
 		},
 	}
 	for _, tC := range testCases {
